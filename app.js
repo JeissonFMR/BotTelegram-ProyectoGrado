@@ -12,6 +12,9 @@ const randomUseragent = require('random-useragent');
 const { setTimeout } = require("timers");
 const { error } = require('console');
 
+const https = require('https');
+
+
 const bot = new Telegraf('5358976147:AAElyGvKden2fyCjAGCoViW5DyFwhTnTxAI');
 const cliente = new Client({
   user: "postgres",
@@ -46,7 +49,7 @@ bot.start(async (ctx) => {
   }, 3000);
 
   setTimeout(() => {
-    ctx.reply(`🔥🔥🔥 *_Igualmente, te comento que integro unos comandos ocultos para que puedas personalizar tu experiencia. Envíame un mensaje cuando necesites mirar cualquiera de los comandos para que te ayude._* 🤩\nLos comandos disponibles son: \n\n*● Opciones:* Muestra de nuevo el menú para que puedas seguir utilizando mi servicio 🤓\n*● Ayudar_encuesta:* Califica mi servicio y ayúdame a mejorar 🤗 \n*● Mejoras:* Sugiere alguna opción nueva para que yo la incorpore 🤝\n*● AcercaDe:* Obtén información sobre mí y mis desarrolladores 🤩`, { parse_mode: 'Markdown' })
+    ctx.reply(`🔥🔥🔥 *_Igualmente, te comento que integro unos comandos ocultos para que puedas personalizar tu experiencia. Envíame un mensaje cuando necesites mirar cualquiera de los comandos para que te ayude._* 🤩\nLos comandos disponibles son: \n\n*● Opciones:* Muestra de nuevo el menú para que puedas seguir utilizando mi servicio 🤓\n*● Ayudarencuesta:* Califica mi servicio y ayúdame a mejorar 🤗 \n*● Mejoras:* Sugiere alguna opción nueva para que yo la incorpore 🤝\n*● AcercaDe:* Obtén información sobre mí y mis desarrolladores 🤩`, { parse_mode: 'Markdown' })
   }, 5000);
 
 });
@@ -193,7 +196,7 @@ bot.command(['acercade', 'Acercade', 'AcercaDe'], async (ctx) => {
     if (estadoDb !== 'espera') {
       await cliente.query("update estadosmessages set estado='start' where telefono='" + number + "'")
       setTimeout(() => {
-        ctx.reply(`🤩 *Esta idea fue desarrollada por un equipo de estudiantes de Ingeniería de Sistemas y su asesor como parte de una investigación de grado, con el fin de contribuir a los procesos académicos en la Jefatura de Software, aportando soluciones innovadoras y eficientes.* 💪\n\nLos desarrolladores fueron:\nBrayan Camilo Jamanoy Bacca 👉👉 3238146048\nJeisson Fernando Montenegro Rosero\nJorge Albeiro Rivera Rosero\n\n\n*UNICESMAG 2023*`, { parse_mode: 'Markdown' })
+        ctx.reply(`🤩 *ADEL* es un proyecto de investigación de grado que busca contribuir a la Jefatura de Software con soluciones eficientes para apoyar los procesos académicos. 🤓 💪\n*A:* Aprender\n*D:* Decidir\n*E:* Evaluar\n*L:* Lograr\n\n_Brayan Camilo Jamanoy Bacca_\n_Jeisson Fernando Montenegro Rosero_\n\nAsesores:\n_Jorge Albeiro Rivera Rosero_\n_Héctor Andrés Mora Paz_\n\n*UNICESMAG 2023*`, { parse_mode: 'Markdown' })
       }, 2000);
     }
   } else if (estadoDb !== 'espera') {
@@ -417,57 +420,46 @@ bot.on(['text', 'voice'], async (ctx) => {
 
     //SCRAPING RUAH
     const webScrapingRuah = async (msjruah, idData) => {
+      const userData = {
+        email: msjruah
+      };
+      // Desactivar la verificación SSL
+      const instance = axios.create({
+        baseURL: 'https://appiruah.unicesmag.edu.co/api/',
+        timeout: 5000,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false
+        })
+      });
+
+
+      ctx.reply(`Por favor *${nameUser}* espera un momento. 🤝🤖`, { parse_mode: 'Markdown' })
       await cliente.query("update estadosmessages set estado='espera' where id='" + idData + "'")
+
       try {
-        ctx.reply(`Por favor *${nameUser}* espera un momento. 🤝🤖`, { parse_mode: 'Markdown' }) //FIXME: A REPLY
-        const header = randomUseragent.getRandom((ua) => {
-          return ua.browserName === 'Chrome'
-        });
-        const browser = await puppeteer.launch({
-          headless: true,
-          ignoreHTTPSErrors: true,
-        });
-        console.log(msjruah + "es el msj ruahhhhhhhhhhhhhhhhhhhhhhhhhhh");
-        const page = await browser.newPage();
 
+        const response = await instance.put('cuenta/recuperarContrasena', userData);
+        // console.log(response.data);
+        let msjDataAPI = response.data.message
+        if (msjDataAPI.includes('enviado') && msjDataAPI.includes('contraseña')) {
+          await cliente.query("update mensajes set msj_recibido='" + msjDataAPI + "' where id='" + idDataMensaje + "'")
+          ctx.reply(msjDataAPI)
 
-        await page.setUserAgent(header);
-
-        await page.setViewport({ width: 1366, height: 768 });
-
-        await page.setDefaultNavigationTimeout(60000);
-
-        try {
-          await page.goto(`https://ruah.unicesmag.edu.co/recuperarclave`);
-
-          const recuperarClave = await page.waitForSelector('#email');
-
-          await recuperarClave.type(msjruah);
-          await page.click('.btn-raised')
-
-          let msjinforuah = await page.waitForSelector('#swal2-content')
-
-          const mensajePlataformaRuah = await page.evaluate(msjinforuah => msjinforuah.innerText, msjinforuah);
-          await cliente.query("update mensajes set msj_recibido='" + mensajePlataformaRuah + "' where id='" + idDataMensaje + "'")
-          await browser.close()
-          if (mensajePlataformaRuah.includes('enviado') && mensajePlataformaRuah.includes('contraseña')) {
-            ctx.reply(mensajePlataformaRuah) //FIXME: REPLY
-            await cliente.query("update estadosmessages set estado='encuesta' where id='" + idData + "'")
-            ctx.reply('💥💥*NOTA:*💥💥  📣📢Ten en cuenta que si utilizas Zeus la contraseña cambio por la que ha sido enviada al correo electronico.', { parse_mode: 'Markdown' })
-            npsEncuesta()
-          } else {
-            ctx.reply(`😕 ¡Vaya! La dirección de correo electrónico no se pudo encontrar. ¡No te preocupes! Aquí tienes dos opciones para solucionarlo:\n\n*1.* 🔁 Volver a escribir el correo\n*2.* 🤔 Hacer otra pregunta\n\n¡Elige la opción que prefieras escribiendo *1* o *2* 🤗`, { parse_mode: 'Markdown' })
-            await cliente.query("update estadosmessages set estado='opcion' where id='" + idData + "'")
-          }
-        } catch (error) {
-          await browser.close()
-          errorCaragRuah = `Disculpame *${nameUser}* 🥹 lo que sucede es que hay muchas peticiones hacia la plataforma en este momento. Por favor vuelve a escribir tu correo`
-          ctx.reply(errorCaragRuah, { parse_mode: 'Markdown' }) //FIXME: reply
-          await cliente.query("update estadosmessages set estado='ruah' where id='" + idData + "'")
-          await cliente.query("update mensajes set msj_recibido='" + errorCaragRuah + "' where id='" + idDataMensaje + "'")
+          await cliente.query("update estadosmessages set estado='encuesta' where id='" + idData + "'")
+          ctx.reply('💥💥 *NOTA:* 💥💥  📣📢Ten en cuenta que si utilizas Zeus la contraseña cambio por la que ha sido enviada al correo electronico.', { parse_mode: 'Markdown' })
+          npsEncuesta()
         }
+
       } catch (error) {
-        console.log(error);
+        const errorCaragRuah = `😕 ¡Vaya! La dirección de correo electrónico no se pudo encontrar. ¡No te preocupes! Aquí tienes dos opciones para solucionarlo:\n\n*1.* 🔁 Volver a escribir el correo\n*2.* 🤔 Hacer otra pregunta\n\n¡Elige la opción que prefieras escribiendo *1* o *2* 🤗`
+        ctx.reply(errorCaragRuah, { parse_mode: 'Markdown' })
+        await cliente.query("update estadosmessages set estado='opcion' where id='" + idData + "'")
+
+
+        await cliente.query("update mensajes set msj_recibido='" + errorCaragRuah + "' where id='" + idDataMensaje + "'")
       }
     }
     //FIN SCRAPING RUAH
@@ -551,16 +543,10 @@ bot.on(['text', 'voice'], async (ctx) => {
           // console.log(mensajeZeus);
           await browser.close()
           if (mensajeZeus.includes('enviado') && mensajeZeus.includes('contraseña')) {
-            client
-              .reply(message.from, mensajeZeus, message.id)
-              .then((result) => {
-                chat.lastReceivedKey._serialized
-                console.log('Result: ', result); //return object success
-              }).catch((erro) => {
-                console.error('Error when sending: ', erro); //return object error
-              });
+            ctx.reply(mensajeZeus)
+
             await cliente.query("update estadosmessages set estado='encuesta' where id='" + idData + "'")
-            ctx.reply('💥💥 *NOTA:* 💥💥  📣📢Ten en cuenta la contraseña  de Ruah cambio por la que ha sido enviada al correo electronico.')
+            ctx.reply('💥💥 *NOTA:* 💥💥  📣📢Ten en cuenta la contraseña  de Ruah cambio por la que ha sido enviada al correo electronico.', { parse_mode: 'Markdown' })
             npsEncuesta()
           } else {
             ctx.reply(`😕 ¡Vaya! La dirección de correo electrónico no se pudo encontrar. ¡No te preocupes! Aquí tienes dos opciones para solucionarlo:\n\n*1.* 🔁 Volver a escribir el correo\n*2.* 🤔 Hacer otra pregunta\n\n¡Elige la opción que prefieras escribiendo *1* o *2* 🤗`, { parse_mode: 'Markdown' })
