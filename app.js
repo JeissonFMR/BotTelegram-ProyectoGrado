@@ -44,7 +44,7 @@ bot.start(async (ctx) => {
   setTimeout(() => {
     ctx.reply(`Me alegra mucho conocerte *${nameUser}* 🤗\n Estoy aquí para ayudarte con los siguientes temas: \n
         ● 🔒Cambio de contraseña para las plataformas Ruah, Tau y Zeus.\n
-        ● 📧Información de correo electronico institucional.\n
+        ● 📧Información de correo electrónico institucional.\n
         ¿En que te puedo colaborar ? 🤔`, { parse_mode: 'Markdown' })
   }, 3000);
 
@@ -170,7 +170,7 @@ bot.command(['Opciones', 'opciones'], async (ctx) => {
     if (estadoDb !== 'espera') {
       await cliente.query("update estadosmessages set estado='start' where telefono='" + number + "'")
       setTimeout(() => {
-        ctx.reply(`${nameUser} *¡Has escrito el comando para el menú principal!*\nTe muestro mis ayudas a continuación: 👇👇\n\n● 🔒Cambio de contraseña para las plataformas Ruah, Tau y Zeus.\n● 📧Información de correo electronico institucional.\n\n Mis comandos son los siguientes 👇👇\n*● Opciones:* Muestra de nuevo el menú para que puedas seguir utilizando mi servicio 🤓\n*● AyudarEncuesta:* Califica mi servicio y ayúdame a mejorar 🤗 \n*● Mejoras:* Sugiere alguna opción nueva para que yo la incorpore 🤝\n*● AcercaDe:* Obtén información sobre mí y mis desarrolladores 🤩\n
+        ctx.reply(`${nameUser} *¡Has escrito el comando para el menú principal!*\nTe muestro mis ayudas a continuación: 👇👇\n\n● 🔒Cambio de contraseña para las plataformas Ruah, Tau y Zeus.\n● 📧Información de correo electrónico institucional.\n\n Mis comandos son los siguientes 👇👇\n*● Opciones:* Muestra de nuevo el menú para que puedas seguir utilizando mi servicio 🤓\n*● AyudarEncuesta:* Califica mi servicio y ayúdame a mejorar 🤗 \n*● Mejoras:* Sugiere alguna opción nueva para que yo la incorpore 🤝\n*● AcercaDe:* Obtén información sobre mí y mis desarrolladores 🤩\n
       ¿En que te puedo colaborar? 🤔`, { parse_mode: 'Markdown' })
       }, 2000);
     }
@@ -344,7 +344,7 @@ bot.on(['text', 'voice'], async (ctx) => {
     /**
   * TODO: METODOS
   */
-    /**VALIDACION PLATAFORMA */
+    /**VALIDACIÓN PLATAFORMA */
     async function validacion_plataforma() {
       try {
         mrtauruah = msjText.toUpperCase();
@@ -376,7 +376,7 @@ bot.on(['text', 'voice'], async (ctx) => {
               console.error("Error when sending: ", erro); //return object error
             });
         } else if (mrtauruah.includes("ZEUS")) {
-          const msjCambioCOntraseñaZeus = "🔐 Para el cambio de contraseña *Zeus*, por favor, introduce tu documento de identidad 📧.  ¡Consigue una contraseña segura y única!"
+          const msjCambioCOntraseñaZeus = "🔐 Para el cambio de contraseña *Zeus*, por favor, introduce tu correo electrónico personal registrado en la universidad 📧. ¡Consigue una contraseña segura y única!"
           //CAMBIO EL ESTADO A TAU
           const queryUpdateZeus = await cliente.query("update estadosmessages set estado='zeus' where telefono='" + number + "'")
           console.log(queryUpdateZeus.rows);
@@ -385,7 +385,7 @@ bot.on(['text', 'voice'], async (ctx) => {
           await cliente.query("update mensajes set msj_recibido='" + msjCambioCOntraseñaZeus + "' where id='" + idDataMensaje + "'")
         }
         else {
-          especificarPlataforma = `Lo siento *${nameUser}* 🤔me debes especificar en tu pregunta la plataforma a la que te refieres 💻 para poder ayudarte mejor 🤝. Ya sea *Ruah* o *Tau*`
+          especificarPlataforma = `Lo siento *${nameUser}* 🤔me debes especificar en tu pregunta la plataforma a la que te refieres 💻 para poder ayudarte mejor 🤝. Ya sea *Ruah*, *Tau* o *Zeus*`
           ctx.reply(especificarPlataforma, { parse_mode: 'Markdown' }) //FIXME: reply
           await cliente.query("update mensajes set msj_recibido='" + especificarPlataforma + "' where id='" + idDataMensaje + "'")
         }
@@ -436,7 +436,6 @@ bot.on(['text', 'voice'], async (ctx) => {
       });
 
 
-      ctx.reply(`Por favor *${nameUser}* espera un momento. 🤝🤖`, { parse_mode: 'Markdown' })
       await cliente.query("update estadosmessages set estado='espera' where id='" + idData + "'")
 
       try {
@@ -449,7 +448,7 @@ bot.on(['text', 'voice'], async (ctx) => {
           ctx.reply(msjDataAPI)
 
           await cliente.query("update estadosmessages set estado='encuesta' where id='" + idData + "'")
-          ctx.reply('💥💥 *NOTA:* 💥💥  📣📢Ten en cuenta que si utilizas Zeus la contraseña cambio por la que ha sido enviada al correo electronico.', { parse_mode: 'Markdown' })
+          ctx.reply('💥💥 *NOTA:* 💥💥  📣📢Ten en cuenta que si utilizas Zeus la contraseña cambio por la que ha sido enviada al correo electrónico.', { parse_mode: 'Markdown' })
           npsEncuesta()
         }
 
